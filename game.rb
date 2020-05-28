@@ -1,7 +1,6 @@
 require "fileutils"
 require "yaml"
 require_relative "board"
-require_relative "player"
 
 class Game
   GAMES_DIR = "game_history"
