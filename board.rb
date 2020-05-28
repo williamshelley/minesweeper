@@ -8,7 +8,10 @@ class Board
   def initialize(size = 9)
     @size = size
     @grid = Array.new(@size) { Array.new(@size) { Tile.random_tile } }
-    @gameover = false
+    @lose = false
+    @num_tiles_revealed = @grid.map do |row|
+      row.count { |tile| !tile.revealed && !tile.is_bomb }
+    end.sum
   end
 
   def render
@@ -16,11 +19,10 @@ class Board
     @grid.each_with_index do |row, i|
       puts "#{i}".colorize(:blue) + " #{row.join(" ")}"
     end
-    "rendered"
   end
 
   def gameover?
-    @gameover
+    self.all_revealed? || @lose
   end
 
   def valid_pos?(pos)
@@ -30,15 +32,21 @@ class Board
     x_valid && y_valid
   end
 
+  def all_revealed?
+    @num_tiles_revealed.zero?
+  end
+
   def reveal(pos, visited = Array.new(@size) { Array.new(@size, false) }, first = true)
     x, y = pos
     return if !valid_pos?(pos)
-    return if @grid[x][y].flagged
-    return @gameover = true if @grid[x][y].is_bomb && first
-    @grid[x][y].reveal_tile if !@grid[x][y].is_bomb
+    return if @grid[x][y].flagged || @grid[x][y].revealed
+    return @lose = true if @grid[x][y].is_bomb && first
+    return if @grid[x][y].is_bomb || visited[x][y]
+
+    @grid[x][y].reveal_tile
+    @num_tiles_revealed -= 1
     @grid[x][y].num_adj_bombs = self.find_num_adj_bombs(pos)
 
-    return if @grid[x][y].is_bomb || visited[x][y]
     visited[x][y] = true
     self.reveal([x + 1, y], visited, false)
     self.reveal([x - 1, y], visited, false)
@@ -69,14 +77,3 @@ class Board
     @grid[x][y].toggle_flag
   end
 end
-
-# 10.times do |variable|
-#   puts ""
-#   puts "new instance"
-#   b = Board.new
-#   x = (0...b.size).to_a.sample
-#   y = (0...b.size).to_a.sample
-#   b.reveal([x, y])
-#   puts ""
-#   b.render
-# end

@@ -45,9 +45,9 @@ class Game
       end
     end
 
-    puts "GAME OVER"
+    puts "GAME OVER! #{@board.all_revealed? ? "YOU WON!" : "YOU LOST!"}"
   end
 end
 
-game = Game.new(10)
+game = Game.new(15)
 game.run
